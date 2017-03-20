@@ -4,6 +4,7 @@
 interval_s=10
 binary=false
 help=false
+log=false
 
 # printing help
 function help {
@@ -16,6 +17,7 @@ Usage:
 Options:
  -f file        file to monitore (mandatory)
  -s interval    interval in seconds to save file changes (default is 10 seconds)
+ -l             prints hystory for a file
  -b             file is binary
             
 EndOfMessage
@@ -41,6 +43,10 @@ while [[ $# > 0 ]]; do
             help=true
             shift
             ;;
+        -l)
+            log=true
+            shift
+            ;;
         *)
             ;;
     esac
@@ -56,6 +62,13 @@ fi
 # we will use hidden floder in home directory to store all data
 # all data related to filename.ext will be placed incide filename_ext directory
 file_dir_name=`echo "$file" | sed -E 's/[\.]+/_/g'`
+
+# print history of changes
+if [[ $log == true ]]; then
+    cat ~/.chistory/${file_dir_name}.log
+    exit 0
+fi
+
 mkdir -p ~/.chistory/${file_dir_name}
 cp $file ~/.chistory/${file_dir_name}
 
