@@ -12,10 +12,9 @@ cat << EndOfMessage
 chistory: saves the history of changes of a file.
 
 Usage:
- chistory [options]
+ chistory [options] file
 
 Options:
- -f file        file to monitore (mandatory)
  -s interval    interval in seconds to save file changes (default is 10 seconds)
  -l             prints hystory for a file
  -b             file is binary
@@ -29,34 +28,38 @@ while [[ $# > 0 ]]; do
     case $key in
         -s)
             interval_s="$2"
-            shift
-            ;;
-        -f)
-            file="$2"
-            shift
+            shift 2
             ;;
         -b)
             binary=true
-            shift
+            shift 1
             ;;
         -h|--help)
             help=true
-            shift
+            shift 1
             ;;
         -l)
             log=true
-            shift
+            shift 1
             ;;
         *)
+            file="$key"
+            shift 1
             ;;
     esac
-    shift
 done
 
 # printing help if needed
 if [[ $help == true ]]; then
     help
     exit 0
+fi
+
+# printing error if file isn't specified
+if [[ -z $file ]]; then
+    echo "Error: file not specified"
+    help
+    exit 1
 fi
 
 # we will use hidden floder in home directory to store all data
