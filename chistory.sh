@@ -5,6 +5,22 @@ interval_s=10
 binary=false
 help=false
 
+# printing help
+function help {
+cat << EndOfMessage
+chistory: saves the history of changes of a file.
+
+Usage:
+ chistory [options]
+
+Options:
+ -f file        file to monitore (mandatory)
+ -s interval    interval in seconds to save file changes (default is 10 seconds)
+ -b             file is binary
+            
+EndOfMessage
+}
+
 # parse command line arguments
 while [[ $# > 0 ]]; do
     key="$1"
@@ -31,20 +47,11 @@ while [[ $# > 0 ]]; do
     shift
 done
 
-# printing help
+test "Test"
+
+# printing help if needed
 if [[ $help == true ]]; then
-cat << EndOfMessage
-chistory: saves the history of changes of a file.
-
-Usage:
- chistory [options]
-
-Options:
- -f file        file to monitore (mandatory)
- -s interval    interval in seconds to save file changes (default is 10 seconds)
- -b             file is binary
-            
-EndOfMessage
+    help
     exit 0
 fi
 
