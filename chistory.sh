@@ -47,8 +47,6 @@ while [[ $# > 0 ]]; do
     shift
 done
 
-test "Test"
-
 # printing help if needed
 if [[ $help == true ]]; then
     help
