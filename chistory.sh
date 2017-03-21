@@ -79,10 +79,42 @@ cp $file ~/.chistory/${file_dir_name}
 LOCKFILE=/tmp/lock.txt
 trap "rm -f ${LOCKFILE}; exit" INT TERM EXIT
 
+# set limit for 10 seconds for functions execution
+function limited_exec() {
+    local limit=10
+    ( 
+        "$@" &
+        child=$!
+        trap -- "" SIGTERM
+        (
+            sleep $limit
+            kill $child 2> /dev/null 
+        ) &
+        wait $child
+    )
+}
+
+function save_changes() {
+    local is_binary=$1
+    local filename=$2
+    local directory=$3
+    # using hexdump for binaries
+    if [[ $is_binary == true ]]; then
+        diff <(hexdump ~/.chistory/${directory}/${filename}) <(hexdump $filename)
+    else
+        diff ~/.chistory/${directory}/${filename} $filename >> ~/.chistory/${directory}.log
+    fi
+    echo >> ~/.chistory/${directory}.log
+
+    # saving modified version of a file as a new template
+    rm ~/.chistory/${directory}/${filename}
+    cp $filename ~/.chistory/${directory}
+}
+
 counter=0
 while true; do
     sleep $interval_s
-    
+
     # useing lockfile to prevent access to file from multiple inctanses of a script
     if [[ -e ${LOCKFILE} ]] && kill -0 `cat ${LOCKFILE}`; then
         continue
@@ -91,25 +123,20 @@ while true; do
     echo $$ > ${LOCKFILE}
 
     # printing date and time of a changes snapshot
+    header='@Change '`date +"%m-%d-%Y %T"`
     if [[ $counter -eq 23 ]]; then
-        echo '@Change '`date +"%m-%d-%Y %T"` > ~/.chistory/${file_dir_name}.log
+        echo $header > ~/.chistory/${file_dir_name}.log
         counter=0
     else
-        echo '@Change '`date +"%m-%d-%Y %T"` >> ~/.chistory/${file_dir_name}.log
+        echo $header >> ~/.chistory/${file_dir_name}.log
         counter=$((counter+1))
     fi
-    
-    # using hexdump for binaries
-    if [[ $binary == true ]]; then
-        diff <(hexdump ~/.chistory/${file_dir_name}/${file}) <(hexdump $file)
-    else
-        diff ~/.chistory/${file_dir_name}/${file} $file >> ~/.chistory/${file_dir_name}.log
+
+    limited_exec save_changes $binary $file $file_dir_name
+    result=$?
+    if [[ $result -eq 143 ]]; then
+        logger 'chistory: failed to save changes of ${file}'
     fi
-    
-    echo >> ~/.chistory/${file_dir_name}.log
-    # saving modified version of a file as a new template
-    rm ~/.chistory/${file_dir_name}/${file}
-    cp $file ~/.chistory/${file_dir_name}
 
     # remove lockfile
     rm -f ${LOCKFILE}
