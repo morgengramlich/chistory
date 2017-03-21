@@ -136,6 +136,8 @@ while true; do
     result=$?
     if [[ $result -eq 143 ]]; then
         logger 'chistory: failed to save changes of ${file}'
+    else
+        logger 'chistory: changes of ${file} were saved successfully'
     fi
 
     # remove lockfile
